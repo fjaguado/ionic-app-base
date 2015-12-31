@@ -13,7 +13,9 @@ $ npm install -g ionic
 Then run:
 
 ```bash
-$ ionic start myProject https://github.com/enguerran/ionic-app-base
+$ git clone https://github.com/enguerran/ionic-app-base myProject
 ```
 
 More info on this can be found on the Ionic [Getting Started](http://ionicframework.com/getting-started) page and the [Ionic CLI](https://github.com/driftyco/ionic-cli) repo.
+
+More info on how to use es2015 syntaxic sugar within angular [in this presentation](http://egorsmirnov.me/assets/berlin-angular-meetup-26/).
