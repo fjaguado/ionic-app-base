@@ -1,4 +1,5 @@
 var gulp            = require('gulp');
+var watch           = require('gulp-watch');
 var runSequence     = require('run-sequence');
 var del             = require('del');
 var notify          = require('gulp-notify');
@@ -64,11 +65,14 @@ gulp.task('views', function() {
 gulp.task('images', function() {
   return gulp.src(paths.images)
     .on('error',interceptErrors)
-    .pipe(gulp.dest('./www/images/'));
+    .pipe(gulp.dest('./www/img/'));
 });
 // Empty destination folder
 gulp.task('empty', function() {
   return del(['./www/**/*', "!./www/lib/**/*"]);
+});
+gulp.task('empty-images', function () {
+  return del('./www/img/**/*');
 });
 // Copy bower libraries to destination folder
 gulp.task('lib', function() {
@@ -90,7 +94,14 @@ gulp.task('watch', function() {
   gulp.watch(paths.sass, ['sass']);
   gulp.watch(paths.javascript, ['javascript','views']);
   gulp.watch(paths.html,['views']);
-  gulp.watch(paths.images,['images']);
+  watch(paths.images, {ignoreInitial:false},function(vinyl){
+    if ( vinyl.event === 'unlink' || vinyl.event === 'change'){
+      // Remove files in destination
+      runSequence('empty-images','images');
+    }else{
+      gulp.start('images');
+    }
+  });
 });
 
 gulp.task('install', ['git-check'], function() {
