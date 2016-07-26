@@ -1,6 +1,6 @@
 class DashboardCtrl {
   constructor() {
-    this.text = 'You can change everthing yo want inside src/'
+    this.text = 'Puedes cambiar lo que quieras dentro de src/'
   }
 }
 
