@@ -2,9 +2,7 @@
   "name": "ionic-app-base-es2015",
   "app_id": "",
   "gulpStartupTasks": [
-    "sass",
-    "javascript",
-    "watch"
+    "init"
   ],
   "watchPatterns": [
     "www/**/*",

@@ -1,23 +1,43 @@
-var gulp = require('gulp');
-var gutil = require('gulp-util');
-var bower = require('bower');
-var concat = require('gulp-concat');
-var sass = require('gulp-sass');
-var rename = require('gulp-rename');
-var sh = require('shelljs');
-var browserify = require('browserify');
-var babelify = require('babelify');
-var source = require('vinyl-source-stream');
+var gulp            = require('gulp');
+var runSequence     = require('run-sequence');
+var del             = require('del');
+var notify          = require('gulp-notify');
+var gutil           = require('gulp-util');
+var bower           = require('bower');
+var concat          = require('gulp-concat');
+var sass            = require('gulp-sass');
+var rename          = require('gulp-rename');
+var sh              = require('shelljs');
+var browserify      = require('browserify');
+var babelify        = require('babelify');
+var source          = require('vinyl-source-stream');
+var templateCache   = require('gulp-angular-templatecache');
 
 var paths = {
-  sass: ['./scss/**/*.scss'],
-  javascript: ['./src/**/*.js']
+  sass: ['./src/scss/**/*.scss'],
+  javascript: ['./src/js/**/*.js'],
+  html: ['./src/js/**/*.html'],
+  images: ['./src/img/**/*'],
+  lib : ['./src/lib/**/*']
 };
 
-gulp.task('default', ['sass', 'javascript']);
+var interceptErrors = function(error) {
+  var args = Array.prototype.slice.call(arguments);
+
+  // Send error to notification center with gulp-notify
+  notify.onError({
+    title: 'Compile Error',
+    message: '<%= error.message %>'
+  }).apply(this, args);
+
+  // Keep gulp from hanging on this task
+  this.emit('end');
+};
+
+gulp.task('default', ['sass','views','javascript']);
 
 gulp.task('javascript', function() {
-  return browserify('./src/app.js', { debug: true })
+  return browserify('./src/js/app.js', { debug: true })
     .transform('babelify', {presets: ['es2015'], sourceMapRelative: '.'})
     .bundle()
     .pipe(source('app.js'))
@@ -25,15 +45,52 @@ gulp.task('javascript', function() {
 });
 
 gulp.task('sass', function(done) {
-  gulp.src('./scss/ionic.app.scss')
+  gulp.src('./src/scss/ionic.app.scss')
     .pipe(sass({outputStyle: 'compressed'}).on('error', sass.logError))
     .pipe(gulp.dest('./www/css/'))
     .on('end', done);
 });
+// Generates template cache file
+gulp.task('views', function() {
+  return gulp.src(paths.html)
+    .pipe(templateCache({
+      standalone: true
+    }))
+    .on('error', interceptErrors)
+    .pipe(rename("app.templates.js"))
+    .pipe(gulp.dest('./src/js/config/'));
+});
+// Copy images from src to www
+gulp.task('images', function() {
+  return gulp.src(paths.images)
+    .on('error',interceptErrors)
+    .pipe(gulp.dest('./www/images/'));
+});
+// Empty destination folder
+gulp.task('empty', function() {
+  return del(['./www/**/*', "!./www/lib/**/*"]);
+});
+// Copy bower libraries to destination folder
+gulp.task('lib', function() {
+  return gulp.src(paths.lib)
+    .on('error', interceptErrors)
+    .pipe(gulp.dest('./www/lib/'));
+});
+
+gulp.task('index', function(){
+  return gulp.src('./src/index.html')
+    .pipe(gulp.dest('./www/'));
+});
+// Initial empty
+gulp.task('init', function(cb) {
+  runSequence('empty','lib','index',['sass','javascript','views'],'watch',cb);
+});
 
 gulp.task('watch', function() {
   gulp.watch(paths.sass, ['sass']);
-  gulp.watch(paths.javascript, ['javascript']);
+  gulp.watch(paths.javascript, ['javascript','views']);
+  gulp.watch(paths.html,['views']);
+  gulp.watch(paths.images,['images']);
 });
 
 gulp.task('install', ['git-check'], function() {
