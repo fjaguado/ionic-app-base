@@ -16,7 +16,7 @@ var templateCache   = require('gulp-angular-templatecache');
 
 var paths = {
   sass: ['./src/scss/**/*.scss'],
-  javascript: ['./src/js/**/*.js'],
+  javascript: ['./src/js/**/*.js', '!./src/js/config/app.templates.js'],
   html: ['./src/js/**/*.html'],
   images: ['./src/img/**/*'],
   lib : ['./src/lib/**/*']
@@ -92,8 +92,12 @@ gulp.task('init', function(cb) {
 
 gulp.task('watch', function() {
   gulp.watch(paths.sass, ['sass']);
-  gulp.watch(paths.javascript, ['javascript','views']);
-  gulp.watch(paths.html,['views']);
+  watch(paths.javascript, {ignoreInitial:false},function(){
+    gulp.start('javascript',['views']);
+  });
+  watch(paths.html, {ignoreInitial:false},function(){
+    gulp.start('views');
+  });
   watch(paths.images, {ignoreInitial:false},function(vinyl){
     if ( vinyl.event === 'unlink' || vinyl.event === 'change'){
       // Remove files in destination
